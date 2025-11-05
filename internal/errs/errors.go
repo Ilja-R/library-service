@@ -14,4 +14,5 @@ var (
 	ErrIncorrectUsernameOrPassword = errors.New("incorrect username or password")
 	ErrInvalidToken                = errors.New("invalid token")
 	ErrSomethingWentWrong          = errors.New("something went wrong")
+	ErrNoFollowingAuthor=errors.New("following author doesn't exists")
 )

@@ -2,35 +2,35 @@ package bootstrap
 
 import (
 	"fmt"
+
 	"net/http"
+
 	http2 "github.com/Ilja-R/library-service/internal/adapter/driving/http"
 	"github.com/Ilja-R/library-service/internal/config"
 	"github.com/Ilja-R/library-service/internal/usecase"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/lib/pq"
+	
 	"github.com/jmoiron/sqlx"
 )
 
 func initDB(cfg config.Postgres) (*sqlx.DB, error) {
-	connConfig, err := pgx.ParseConfig(cfg.ConnectionURL())
+	postgresOpen := fmt.Sprintf(
+		`host=%s
+			user=%s
+			password=%s
+			dbname=%s
+			sslmode=disable`,
+		cfg.PostgresHost,
+		cfg.PostgresUser,
+		cfg.PostgresPassword,
+		cfg.PostgresDatabase,
+	)
+	db, err := sqlx.Open("postgres", postgresOpen)
 	if err != nil {
-		return nil, err
+		return nil,err
 	}
-
-	connStr := stdlib.RegisterConnConfig(connConfig)
-
-	db, err := sqlx.Connect("pgx", connStr)
-	if err != nil {
-		return db, err
-	}
-
-	// Connection configuration
-	// more info here https://www.alexedwards.net/blog/configuring-sqldb
-	db.SetMaxOpenConns(cfg.MaxOpenConnections)
-	db.SetMaxIdleConns(cfg.MaxIdleConnections)
-	db.SetConnMaxLifetime(cfg.ConnectionMaxLifetime)
 
 	return db, nil
 }

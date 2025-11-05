@@ -8,11 +8,15 @@ func (s *Server) endpoints() {
 
 	apiG := s.router.Group("/api", s.checkUserAuthentication)
 	{
-		apiG.GET("/books", s.GetAllBooks)
-		apiG.GET("/books/:id", s.GetBookByID)
-		apiG.POST("/books", s.checkIsAdmin, s.CreateProduct)
-		apiG.PUT("/books/:id", s.checkIsAdmin, s.UpdateProductByID)
-		apiG.DELETE("/books/:id", s.checkIsAdmin, s.DeleteProductByID)
+		bookG:=apiG.Group("/books")
+		{
+			bookG.GET("/", s.GetAllBooks)
+			bookG.GET("/:id", s.GetBookByID)
+			bookG.POST("/", s.checkIsAdmin, s.CreateBook)
+			bookG.PUT("/:id", s.checkIsAdmin, s.UpdateBook)
+			bookG.DELETE("/:id", s.checkIsAdmin, s.DeleteBookByID)
+		}
+		
 	}
 
 }

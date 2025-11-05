@@ -23,7 +23,7 @@ func New(
 	uc *usecase.UseCases,
 ) *http.Server {
 	r := gin.New()
-
+	
 	srv := &Server{
 		router: r,
 		cfg:    cfg,
@@ -38,7 +38,6 @@ func New(
 		ReadHeaderTimeout: httpServerReadHeaderTimeout,
 	}
 
-	// srv.log.Info(fmt.Sprintf("HTTP server is initialized on port: %v", cfg.HTTPPort))
 
 	return httpServer
 }

@@ -1,8 +1,12 @@
 package http
 
 import (
+	"fmt"
+	"log"
+
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Ilja-R/library-service/internal/domain"
 	"github.com/Ilja-R/library-service/internal/errs"
@@ -11,11 +15,45 @@ import (
 
 
 type Book struct{
-
-}
-func (b *Book) FromDomain(dbBook domain.Book) {
+	ID int `json:"id"`
+	Title string `json:"title"`
+	Pub_date time.Time `json:"pub_date"`
+	Publisher string `json:"publisher"`
+	Genre string `json:"genre"`
+	Pages int `json:"pages"`
+	Description string `json:"description"`
+	Created_at time.Time `json:"created_at"`
+	Updated_at time.Time `json:"updated_at"`
 	
 }
+
+func (b *Book) FromDomain(dBook domain.Book) {
+	b.ID=dBook.ID
+	b.Title=dBook.Title
+	b.Pub_date=dBook.Pub_date
+	b.Publisher=dBook.Publisher
+	b.Genre=dBook.Genre
+	b.Pages=dBook.Pages
+	b.Description=dBook.Description
+	b.Created_at=dBook.Created_at
+	b.Updated_at=dBook.Updated_at
+}
+
+type CreateBook struct{
+	
+	
+	Title string `json:"title"`
+	AuthorName string `json:"name"`
+	AuthorSurname string `json:"surname"`
+	Publisher string `json:"publisher"`
+	Genre string `json:"genre"`
+	Pages int `json:"pages"`
+	Description string `json:"description"`
+	
+}
+
+
+
 
 
 
@@ -70,4 +108,115 @@ func (s*Server)GetBookByID(c*gin.Context){
 	book.FromDomain(dBook)
 
 	c.JSON(http.StatusOK, book)
+}
+
+
+func(b *CreateBook)ToDomain()*domain.CreateBook{
+	return &domain.CreateBook{
+	Title :b.Title,
+	AuthorName :b.AuthorName,
+	AuthorSurname :b.AuthorSurname,
+	Publisher :b.Publisher,
+	Genre :b.Genre,
+	Pages :b.Pages,
+	Description :b.Description,
+
+	}
+}
+
+func (s*Server) CreateBook(c*gin.Context){
+	createBook:=CreateBook{}
+	err:=c.BindJSON(&createBook)
+	if err!=nil{
+		c.JSON(http.StatusBadRequest,CommonError{
+			Error:fmt.Errorf("%s","error binding").Error(),
+		})
+	}
+	dBook:=createBook.ToDomain()
+	err=s.uc.BookCreator.CreateBook(c,*dBook)
+		if err!=nil{
+		c.JSON(http.StatusInternalServerError,CommonError{
+			Error:err.Error(),
+		})
+		
+		}
+		if err==nil{
+			c.JSON(http.StatusInternalServerError,CommonResponse{
+				Message:"book successfully created",
+			},
+		)
+		}
+	}
+
+type UpdateBookBody struct{
+	Title string `json:"title"`
+	AuthorName string `json:"name"`
+	AuthorSurname string `json:"surname"`
+	Publisher string`json:"publisher"`
+	Genre string `json:"genre"`
+	Pages int `json:"pages"`
+	Description string `json:"description"`
+}
+
+func(u*UpdateBookBody)ToDomain()*domain.UpdateBookBody{
+	return &domain.UpdateBookBody{
+		Title:u.Title,
+		AuthorName: u.AuthorName,
+		AuthorSurname: u.AuthorSurname,
+		Publisher: u.Publisher,
+		Genre: u.Genre,
+		Pages:u.Pages,
+		Description: u.Description,
+	}
+} 
+
+func (s*Server) UpdateBook(c*gin.Context){
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id < 1 {
+		s.handleError(c, errs.ErrInvalidBookID)
+		return
+	}
+	var updBookBody UpdateBookBody
+	err=c.BindJSON(&updBookBody)
+	if err!=nil{
+		c.JSON(http.StatusBadRequest,CommonError{
+			Error: fmt.Errorf("error binding").Error(),
+		})
+	}
+	dBookBody:=updBookBody.ToDomain()
+	if err=s.uc.BookUpdater.UpdateBook(c,*dBookBody,id);err!=nil{
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError,CommonError{
+			Error:errs.ErrSomethingWentWrong.Error(),
+		})
+	}
+	if err==nil{
+		c.JSON(http.StatusOK,CommonResponse{
+			Message:"book updated",
+		})
+	}
+	
+}
+
+
+
+func (s*Server)DeleteBookByID(c *gin.Context){
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id < 1 {
+		s.handleError(c, errs.ErrInvalidBookID)
+		return
+	}
+	err=s.uc.BookDeleter.DeleteBookByID(c,id)
+	if err!=nil{
+		c.JSON(http.StatusInternalServerError,CommonError{
+			Error: err.Error(),
+		})
+	}
+	if err==nil{
+		c.JSON(http.StatusOK,CommonResponse{
+			Message: "book is successfully deleted",
+		})
+	}
 }

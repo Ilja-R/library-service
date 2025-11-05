@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Ilja-R/library-service/internal/domain"
@@ -23,6 +24,7 @@ func (s *Server) checkUserAuthentication(c *gin.Context) {
 
 	userID, isRefresh, userRole, err := pkg.ParseToken(token)
 	if err != nil {
+		log.Println("error!!!!!!!!!!")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, CommonError{Error: err.Error()})
 		return
 	}

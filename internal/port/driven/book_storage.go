@@ -14,7 +14,7 @@ import (
 type BookStorage interface {
 	GetAllBooks(ctx context.Context) (books []domain.Book, err error)
 	GetBookByID(ctx context.Context, id int) (domain.Book, error)
-	CreateProduct(ctx context.Context, book domain.Book) (err error)
-	UpdateProductByID(ctx context.Context, book domain.Book) (err error)
+	CreateBook(ctx context.Context, createBook domain.CreateBook) (err error)
+	UpdateBookByID(ctx context.Context, book domain.UpdateBookBody, id int ) (err error)
 	DeleteBookByID(ctx context.Context, id int) (err error)
 }

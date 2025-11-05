@@ -49,7 +49,7 @@ func ParseToken(tokenString string) (int,bool,domain.Role,error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method:%v", token.Header["alg"])
 		}
-		return []byte(os.Getenv("JWT_KEY")), nil
+		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil {
 		return 0,false,"",err

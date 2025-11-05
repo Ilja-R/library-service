@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-const ServiceLabel = "products_service"
+const ServiceLabel = "library_service"
 
 type Config struct {
-	HTTPPort string    `env:"HTTP_PORT" default:"9999"`
+	HTTPPort string    `env:"HTTP_PORT" default:"8888"`
 	Postgres *Postgres `env:",prefix=POSTGRES_"`
 	Redis    *Redis    `env:",prefix=REDIS_"`
 }
@@ -43,6 +43,7 @@ func (c *Postgres) ConnectionURL() string {
 			c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresDatabase)
 	}
 
+	
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.PostgresDatabase)
 }
