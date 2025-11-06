@@ -16,7 +16,6 @@ type Book struct{
 }
 
 type CreateBook struct{
-	ID int 
 	Title string 
 	AuthorName string 
 	AuthorSurname string 

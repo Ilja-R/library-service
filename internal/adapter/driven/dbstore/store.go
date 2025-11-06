@@ -2,7 +2,7 @@ package dbstore
 
 import (
 	"context"
-
+	"log"
 
 	"github.com/Ilja-R/library-service/internal/domain"
 	"github.com/jmoiron/sqlx"
@@ -33,7 +33,7 @@ func (d *DBStore) DeleteBookByID(ctx context.Context, id int) error {
 // GetAllBooks implements driven.BookStorage.
 func (d *DBStore) GetAllBooks(ctx context.Context) (books []domain.Book, err error) {
 	books,err=d.BookStorage.GetAllBooks(ctx)
-	
+	log.Println("store get all books",books)
 	if err!=nil{
 		return nil ,err
 	}
@@ -58,7 +58,14 @@ func (d *DBStore) UpdateBookByID(ctx context.Context, book domain.UpdateBookBody
 	return nil 
 
 }
+func (d *DBStore) SearchByTitle(ctx context.Context,title string) (books []domain.Book,err error) {
+	books ,err=d.BookStorage.SearchByTitle(ctx,title)
+	if err!=nil{
+		return nil ,err
+	}
+	return books ,nil  
 
+}
 func New(db *sqlx.DB) *DBStore {
 	return &DBStore{
 		BookStorage: NewBookStorage(db),

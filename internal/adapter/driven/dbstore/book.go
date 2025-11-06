@@ -65,8 +65,8 @@ func (b *Book) FromDomain(dBook domain.Book) {
 	b.Description=dBook.Description
 }
 
-func (b *Book) ToDomain() domain.Book {
-	return domain.Book{
+func (b *Book) ToDomain() *domain.Book {
+	return &domain.Book{
 		ID:b.ID,
 		Title:b.Title,
 		Pub_date:b.Pub_date,
@@ -74,6 +74,8 @@ func (b *Book) ToDomain() domain.Book {
 		Genre:b.Genre,
 		Pages:b.Pages,
 		Description:b.Description,
+		Created_at: b.CreatedAt,
+		Updated_at: b.UpdatedAt,
 	}
 }
 
@@ -89,11 +91,11 @@ func (b *BookStorage) GetAllBooks(ctx context.Context) (books []domain.Book, err
 		return nil, b.translateError(err)
 	}
 	
-
+	
 	for _, dbBook := range dbBooks{
-		books = append(books, dbBook.ToDomain())
+		books = append(books,*dbBook.ToDomain())
 	}
-
+	
 	return books, nil
 }
 
@@ -109,7 +111,7 @@ func (b *BookStorage) GetBookByID(ctx context.Context, id int) (domain.Book, err
 		return domain.Book{}, b.translateError(err)
 	}
 
-	return dbBook.ToDomain(), nil
+	return *dbBook.ToDomain(), nil
 }
 type CompareBooks struct {
 	Name string `db:"name"`
@@ -119,7 +121,7 @@ type CompareBooks struct {
 }
 func (b *BookStorage) CreateProduct(ctx context.Context, createBook domain.CreateBook) (error) {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Str("func_name", "dbstore.CreateBook").Logger()
-	
+	logger.Debug().Any("createBook",createBook).Send()
 	author:=Author{}
 	err:=b.db.GetContext(ctx,&author,`
 	SELECT id,name,surname from authors
@@ -280,4 +282,19 @@ func (b *BookStorage) DeleteBookByID(ctx context.Context, id int) (error) {
 	
 
 	return nil
+}
+
+func(b *BookStorage)SearchByTitle(ctx context.Context, title string)(books []domain.Book,err error){
+	dbBooks :=make([]Book,0)
+	err=b.db.SelectContext(ctx,&books,`
+	SELECT id,title,pub_date,publisher,genre,pages,description,created_at,updated_at FROM books
+	where title =$1
+	`,title)
+	if err!=nil{
+		return nil ,err 
+	}
+	for _, dbBook := range dbBooks{
+		books = append(books, *dbBook.ToDomain())
+	}
+	return books,nil
 }
