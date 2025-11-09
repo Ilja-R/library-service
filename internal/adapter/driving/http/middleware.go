@@ -13,6 +13,7 @@ const (
 	authorizationHeader = "Authorization"
 	userIDCtx           = "userID"
 	userRoleCtx         = "userRole"
+	UsernameCtx="Username"
 )
 
 func (s *Server) checkUserAuthentication(c *gin.Context) {
@@ -22,7 +23,7 @@ func (s *Server) checkUserAuthentication(c *gin.Context) {
 		return
 	}
 
-	userID, isRefresh, userRole, err := pkg.ParseToken(token)
+	userID,username, isRefresh, userRole, err := pkg.ParseToken(token)
 	if err != nil {
 		log.Println("error!!!!!!!!!!")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, CommonError{Error: err.Error()})
@@ -35,6 +36,7 @@ func (s *Server) checkUserAuthentication(c *gin.Context) {
 	}
 
 	c.Set(userIDCtx, userID)
+	c.Set(UsernameCtx, username)
 	c.Set(userRoleCtx, string(userRole))
 }
 

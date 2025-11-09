@@ -66,6 +66,24 @@ func (d *DBStore) SearchByTitle(ctx context.Context,title string) (books []domai
 	return books ,nil  
 
 }
+
+
+
+func(d *DBStore)OrderBookByTitle(ctx context.Context,title string,username string)error{
+	err:=d.BookStorage.OrderBookByTitle(ctx,title,username)
+	if err!=nil{
+		return err 
+	}
+	return nil 
+}
+
+func (d*DBStore)GetMyBooks(ctx context.Context,username string)([]domain.Book,error){
+	dBooks,err:=d.BookStorage.GetMyBooks(ctx,username)
+	if err!=nil{
+		return nil,err
+	}
+	return dBooks,nil
+}
 func New(db *sqlx.DB) *DBStore {
 	return &DBStore{
 		BookStorage: NewBookStorage(db),

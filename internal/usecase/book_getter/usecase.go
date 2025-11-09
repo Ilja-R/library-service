@@ -63,3 +63,11 @@ func(u*UseCase)GetBookByID(ctx context.Context,id int )(book domain.Book,err err
 	return book,nil 
 
 }
+
+func (u*UseCase)GetMyBooks(ctx context.Context,username string)([]domain.Book,error){
+	dBooks,err:=u.BookStorage.GetMyBooks(ctx,username)
+	if err!=nil{
+		return nil,err
+	}
+	return dBooks,nil
+}

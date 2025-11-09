@@ -29,14 +29,15 @@ type Book struct {
 func (b *Book) FromDomain(dBook domain.Book) {
 	b.ID = dBook.ID
 	b.Title = dBook.Title
-	b.Pub_date = dBook.Pub_date.String()
+	b.Pub_date=dBook.Pub_date.Format("2 Jan 2006")
 	b.Publisher = dBook.Publisher
 	b.Genre = dBook.Genre
 	b.Pages = dBook.Pages
 	b.Description = dBook.Description
-	b.Created_at = dBook.Created_at.String()
-	b.Updated_at = dBook.Updated_at.String()
+	b.Created_at = dBook.Created_at.Format("2 Jan 2006 15:04:05")
+	b.Updated_at = dBook.Updated_at.Format("2 Jan 2006 15:04:05")
 }
+
 
 type CreateBook struct {
 	Title         string `json:"title"`
@@ -240,13 +241,73 @@ func (s *Server) DeleteBookByID(c *gin.Context) {
 
 func (s *Server) SearchByTitle(c *gin.Context) {
 	title := c.Query("title")
-	books, err := s.uc.BookSearcher.SearchByTitle(c, title)
+	book:=Book{}
+	dbooks, err := s.uc.BookSearcher.SearchByTitle(c, title)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, CommonError{
-			Error: errs.ErrSomethingWentWrong.Error(),
+			Error: err.Error(),
 		})
 		return
 	}
-	c.JSON(http.StatusOK, books)
+	books:=make([]Book,0)
+	for _,v:= range dbooks{
+		book.FromDomain(v)
+		books=append(books,book)
+	}
 
+	c.JSON(http.StatusOK,books)
+
+}
+
+
+func(s*Server) OrderBookByTitle(c*gin.Context){
+	title := c.Query("title")
+	username,_:=c.Get(UsernameCtx)
+	dbooks,err:=s.uc.BookSearcher.SearchByTitle(c, title)
+	if err!=nil{
+		c.JSON(http.StatusBadRequest,CommonError{
+			Error:err.Error(),
+		})
+		return
+	}
+	if dbooks==nil{
+		c.JSON(http.StatusBadRequest,CommonError{
+			Error: errs.ErrNoBookWithFollowingTitle.Error(),
+		})
+		return 
+	}
+	book:=Book{}
+	books:=make([]Book,0)
+	for _,v:= range dbooks{
+		book.FromDomain(v)
+		books=append(books,book)
+	}
+	err=s.uc.BookOrderer.OrderBookByTitle(c,title,username.(string))
+	if err!=nil{
+		c.JSON(http.StatusBadRequest,CommonError{
+			Error: err.Error(),
+		})
+		return 
+	}
+}
+
+func (s*Server)GetMyBooks(c*gin.Context){
+	username ,_:=c.Get(UsernameCtx)
+	
+	dBooks,err:=s.uc.BookGetter.GetMyBooks(c,username.(string))
+	if err!=nil{
+		c.JSON(http.StatusBadRequest,CommonError{
+			Error: err.Error(),
+		})
+		return
+	}
+	books:=make([]Book,0)
+	book:=Book{}
+
+	for _,dBook:=range dBooks{
+		book.FromDomain(dBook)
+		books=append(books,book)
+	}
+
+	c.JSON(http.StatusOK,books)
 }

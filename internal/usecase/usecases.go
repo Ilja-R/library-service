@@ -8,6 +8,7 @@ import (
 	bookcreator "github.com/Ilja-R/library-service/internal/usecase/book_creator"
 	bookdeleter "github.com/Ilja-R/library-service/internal/usecase/book_deleter"
 	bookgetter "github.com/Ilja-R/library-service/internal/usecase/book_getter"
+	bookorderer "github.com/Ilja-R/library-service/internal/usecase/book_orderer"
 	booksearcher "github.com/Ilja-R/library-service/internal/usecase/book_searcher"
 	bookupdater "github.com/Ilja-R/library-service/internal/usecase/book_updater"
 )
@@ -17,6 +18,7 @@ type UseCases struct{
 	BookUpdater usecase.BookUpdater
 	BookDeleter usecase.BookDeleter
 	BookSearcher usecase.BookSearcher
+	BookOrderer usecase.BookOrderer
 }
 
 
@@ -27,5 +29,6 @@ func New(cfg *config.Config, store *dbstore.DBStore, cache *cache.Cache) *UseCas
 		BookUpdater: bookupdater.New(cfg,store),
 		BookDeleter: bookdeleter.New(cfg,store),
 		BookSearcher: booksearcher.New(cfg,store),
+		BookOrderer: bookorderer.New(cfg,store),
 	}
 }

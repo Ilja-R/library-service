@@ -2,9 +2,10 @@ package dbstore
 
 import (
 	"context"
+
+
 	"errors"
 	"fmt"
-
 
 	"time"
 
@@ -284,17 +285,87 @@ func (b *BookStorage) DeleteBookByID(ctx context.Context, id int) (error) {
 	return nil
 }
 
-func(b *BookStorage)SearchByTitle(ctx context.Context, title string)(books []domain.Book,err error){
+func(b *BookStorage)SearchByTitle(ctx context.Context, title string)([]domain.Book,error){
+	logger := zerolog.New(os.Stdout).With().Timestamp().Str("func_name", "dbstore.SearchByTitle").Logger()
 	dbBooks :=make([]Book,0)
-	err=b.db.SelectContext(ctx,&books,`
+	books:=make([]domain.Book,0)
+	err:=b.db.SelectContext(ctx,&dbBooks,`
 	SELECT id,title,pub_date,publisher,genre,pages,description,created_at,updated_at FROM books
 	where title =$1
 	`,title)
-	if err!=nil{
-		return nil ,err 
+	
+	logger.Err(err).AnErr("err",err).Send()
+	logger.Debug().Any("books",dbBooks).Send()
+	
+	if len(dbBooks)<1{
+		return nil,errs.ErrNoBookWithFollowingTitle
 	}
 	for _, dbBook := range dbBooks{
 		books = append(books, *dbBook.ToDomain())
 	}
 	return books,nil
 }
+
+func (b*BookStorage) OrderBookByTitle(ctx context.Context,title string, username string)error{
+	logger := zerolog.New(os.Stdout).With().Timestamp().Str("func_name", "dbstore.SearchByTitle").Logger()
+	var id int 
+	err:=b.db.GetContext(ctx,&id,
+	`
+	select id from usernames where username=$1
+	`,username)
+	logger.Info().Any("id",id).Send()
+	if err!=nil{
+		logger.Err(err).Send()
+		return errs.ErrNoUsername
+	}
+	books,err:=b.SearchByTitle(ctx,title)
+	if err!=nil{
+		logger.Err(err).Send()
+		return errs.ErrBookNotFound
+	}
+	_,err=b.db.ExecContext(ctx,`
+	update book_username 
+	set username_id=$1 where book_id=$2
+	`,id,books[0].ID)
+	if err!=nil{
+		logger.Err(err).Msg("3")
+	}
+
+
+	return nil 
+}
+
+func (b *BookStorage)GetMyBooks(ctx context.Context,username string)([]domain.Book,error){
+	logger := zerolog.New(os.Stdout).With().Timestamp().Str("func_name", "dbstore.GetMyBooks").Logger()
+	var id int 
+	err:=b.db.GetContext(ctx,&id,
+	`
+	select id from usernames where username=$1
+	`,username)
+	logger.Info().Any("id",id).Send()
+	if err!=nil{
+		logger.Err(err).Send()
+		return nil,errs.ErrNoUsername
+	}
+	dbBooks:=make([]Book,0)
+	err=b.db.SelectContext(ctx,&dbBooks,
+	`
+	select books.id,title,pub_date,publisher,genre,
+	pages,description,created_at,updated_at from book_username 
+	inner join books on book_id =books.id 
+	inner join usernames on username_id =usernames.id
+	where username = $1
+	`,username)
+	if err!=nil{
+		logger.Err(err).Send()
+		return nil ,errs.ErrSomethingWentWrong
+	}
+	logger.Info().Any("books",dbBooks).Send()
+	dBooks:=make([]domain.Book,0)
+	for _,dbBook:=range dbBooks{
+		dBooks=append(dBooks,*dbBook.ToDomain())
+	}
+	return dBooks,nil
+
+}
+

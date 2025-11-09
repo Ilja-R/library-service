@@ -18,4 +18,6 @@ type BookStorage interface {
 	UpdateBookByID(ctx context.Context, book domain.UpdateBookBody, id int ) (err error)
 	DeleteBookByID(ctx context.Context, id int) (err error)
 	SearchByTitle(ctx context.Context,title string) (books []domain.Book,err error)
+	OrderBookByTitle(ctx context.Context,title string, username string)error
+	GetMyBooks(ctx context.Context,username string)([]domain.Book,error)
 }

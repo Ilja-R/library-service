@@ -16,6 +16,8 @@ func (s *Server) endpoints() {
 			bookG.PUT("/:id", s.checkIsAdmin, s.UpdateBook)
 			bookG.DELETE("/:id", s.checkIsAdmin, s.DeleteBookByID)
 			bookG.GET("/search",s.SearchByTitle)
+			bookG.GET("/order",s.OrderBookByTitle)
+			bookG.GET("/ordered",s.GetMyBooks)
 		}
 		
 	}
